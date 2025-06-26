@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSafe Predictor: Water Potability Analysis</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background: #E6F0FA;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* Water Effect Background */
+        .water-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(135, 206, 235, 0.3), rgba(15, 76, 117, 0.2));
+            z-index: -1;
+            overflow: hidden;
+        }
+        .water-wave {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-20.67,206.8-18.55C437.72,57.86,512,77.65,600,77.65c88,0,162.28-19.79,235.2-21.91,70.47-2.04,136.44,13.26,206.8,18.55,54.41,4.13,110.21-5.84,158-28V0H0Z" fill="%234DA8DA" fill-opacity="0.5"/></svg>');
+            background-size: 50%;
+            animation: wave 10s linear infinite;
+        }
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        /* Animated Bubbles */
+        .bubbles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: rgba(135, 206, 235, 0.4);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: rise 10s infinite ease-in;
+            box-shadow: 0 0 10px rgba(15, 76, 117, 0.3);
+        }
+        @keyframes rise {
+            0% { transform: translateY(0) translateX(0); opacity: 0.6; }
+            50% { transform: translateY(-50vh) translateX(10px); opacity: 0.8; }
+            100% { transform: translateY(-100vh) translateX(-10px); opacity: 0; }
+        }
+        .bubble:nth-child(1) { width: 40px; height: 40px; left: 5%; animation-duration: 12s; }
+        .bubble:nth-child(2) { width: 60px; height: 60px; left: 15%; animation-duration: 15s; animation-delay: 2s; }
+        .bubble:nth-child(3) { width: 30px; height: 30px; left: 25%; animation-duration: 18s; animation-delay: 4s; }
+        .bubble:nth-child(4) { width: 50px; height: 50px; left: 35%; animation-duration: 14s; animation-delay: 1s; }
+        .bubble:nth-child(5) { width: 70px; height: 70px; left: 45%; animation-duration: 16s; animation-delay: 3s; }
+        .bubble:nth-child(6) { width: 20px; height: 20px; left: 55%; animation-duration: 20s; }
+        .bubble:nth-child(7) { width: 45px; height: 45px; left: 65%; animation-duration: 13s; animation-delay: 5s; }
+        .bubble:nth-child(8) { width: 55px; height: 55px; left: 75%; animation-duration: 17s; animation-delay: 2s; }
+        .bubble:nth-child(9) { width: 35px; height: 35px; left: 85%; animation-duration: 19s; animation-delay: 3s; }
+        .bubble:nth-child(10) { width: 65px; height: 65px; left: 95%; animation-duration: 11s; animation-delay: 1s; }
+        .header {
+            background-color: #4DA8DA;
+            color: #1B263B;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-20.67,206.8-18.55C437.72,57.86,512,77.65,600,77.65c88,0,162.28-19.79,235.2-21.91,70.47-2.04,136.44,13.26,206.8,18.55,54.41,4.13,110.21-5.84,158-28V0H0Z" fill="%230F4C75"/></svg>');
+            background-size: cover;
+        }
+        .header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            position: relative;
+            display: inline-block;
+            animation: shimmer 3s infinite;
+            text-shadow: 0 0 10px #87CEEB;
+        }
+        @keyframes shimmer {
+            0% { text-shadow: 0 0 5px #87CEEB; }
+            50% { text-shadow: 0 0 20px #0F4C75; }
+            100% { text-shadow: 0 0 5px #87CEEB; }
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 220px;
+            background-color: #A3CFFA;
+            padding-top: 70px;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+        .sidebar a {
+            color: #1B263B;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            transition: transform 0.3s, background 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .sidebar a:hover {
+            background: linear-gradient(90deg, #87CEEB, #0F4C75);
+            color: white;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: bubble-float 0.5s ease-in-out;
+        }
+        @keyframes bubble-float {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.1); }
+            100% { transform: translateY(-5px) scale(1.05); }
+        }
+        .sidebar a i {
+            margin-right: 10px;
+            color: #0F4C75;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        /* Bubble Sections */
+        .section {
+            margin: 3rem 0;
+            position: relative;
+        }
+        .section-bubble {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #87CEEB, #0F4C75);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        .section-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #87CEEB;
+        }
+        .section-bubble i {
+            margin-right: 5px;
+        }
+        .section-bubble::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3), transparent);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .section-bubble:hover::after {
+            opacity: 1;
+            animation: ripple-wave 1s infinite;
+        }
+        @keyframes ripple-wave {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .section-content {
+            display: none;
+            padding: 2rem;
+            background: rgba(245, 249, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 2px solid rgba(135, 206, 235, 0.3);
+            position: relative;
+            margin-top: 1rem;
+            animation: bubble-grow 0.5s ease-out;
+            z-index: 2;
+        }
+        @keyframes bubble-grow {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .section-content h2 {
+            font-family: 'Poppins', sans-serif;
+            color: #1B263B;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            text-shadow: 0 0 5px #87CEEB;
+        }
+        .section-content h2 i {
+            margin-right: 10px;
+            color: #0F4C75;
+            animation: drip 2s infinite;
+        }
+        @keyframes drip {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(5px); opacity: 0.7; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .divider {
+            height: 50px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-20.67,206.8-18.55C437.72,57.86,512,77.65,600,77.65c88,0,162.28-19.79,235.2-21.91,70.47-2.04,136.44,13.26,206.8,18.55,54.41,4.13,110.21-5.84,158-28V0H0Z" fill="%23BFD7EA"/></svg>');
+            background-size: cover;
+            margin: 2rem 0;
+        }
+        .plot-img {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            margin: 1rem auto;
+            display: block;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .plot-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .plot-iframe {
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            margin: 1rem auto;
+            display: block;
+            border: none;
+            border-radius: 10px;
+        }
+        .table-container {
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid #BFD7EA;
+            cursor: pointer;
+        }
+        th {
+            background: linear-gradient(90deg, #4DA8DA, #0F4C75);
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #F5F9FF;
+        }
+        .progress {
+            height: 20px;
+            margin: 0.5rem 0;
+            background-color: #A3CFFA;
+            border-radius: 10px;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #87CEEB, #0F4C75);
+            transition: width 1.5s ease-in-out;
+        }
+        .insights, .description {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(191, 215, 234, 0.5);
+            backdrop-filter: blur(5px);
+            border-radius: 10px;
+            border: 1px solid rgba(135, 206, 235, 0.3);
+        }
+        .faq-item {
+            margin: 0.5rem 0;
+        }
+        .faq-item h5 {
+            cursor: pointer;
+            color: #1B263B;
+            display: flex;
+            align-items: center;
+        }
+        .faq-item h5 i {
+            margin-right: 10px;
+            color: #0F4C75;
+        }
+        .faq-item p {
+            display: none;
+            margin-top: 0.5rem;
+            background: rgba(135, 206, 235, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: #BFD7EA;
+            color: #1B263B;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+        .modal-img {
+            width: 100%;
+            max-width: 1000px;
+            height: auto;
+            border-radius: 10px;
+        }
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(90deg, #87CEEB, #0F4C75);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+            animation: bounce 2s infinite;
+            z-index: 1;
+        }
+        #backToTop:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #87CEEB;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        /* Prediction Section Styles */
+        .prediction-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            color: #1B263B;
+            margin-bottom: 0.5rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-group input {
+            padding: 0.5rem;
+            border: 2px solid #A3CFFA;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: border 0.3s, background 0.3s;
+            position: relative;
+        }
+        .form-group input:focus {
+            border-color: #0F4C75;
+            background: rgba(135, 206, 235, 0.2);
+            outline: none;
+            animation: wave-border 1.5s infinite;
+        }
+        @keyframes wave-border {
+            0% { box-shadow: 0 0 5px #87CEEB; }
+            50% { box-shadow: 0 0 15px #0F4C75; }
+            100% { box-shadow: 0 0 5px #87CEEB; }
+        }
+        .predict-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(90deg, #87CEEB, #0F4C75);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .predict-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #87CEEB;
+        }
+        .predict-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.8s, height 0.8s;
+        }
+        .predict-btn:active::after {
+            width: 400px;
+            height: 400px;
+        }
+        .result-container {
+            margin-top: 2rem;
+        }
+        .result-card {
+            padding: 1.5rem;
+            background: rgba(245, 249, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 2px solid rgba(135, 206, 235, 0.3);
+            text-align: center;
+            animation: bubble-pop 0.7s ease-out;
+        }
+        @keyframes bubble-pop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .result-card h4 {
+            font-family: 'Poppins', sans-serif;
+            color: #1B263B;
+            margin-bottom: 1rem;
+        }
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: ripple 2s infinite;
+        }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Water Effect Background -->
+    <div class="water-bg">
+        <div class="water-wave"></div>
+        <div class="bubbles">
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <a href="#introduction" onclick="smoothScroll('introduction')"><i class="bi bi-house-door"></i> Introduction</a>
+        <a href="#dataset-impact" onclick="smoothScroll('dataset-impact')"><i class="bi bi-water"></i> Dataset & Impact</a>
+        <a href="#eda" onclick="smoothScroll('eda')"><i class="bi bi-bar-chart"></i> EDA</a>
+        <a href="#preprocessing" onclick="smoothScroll('preprocessing')"><i class="bi bi-gear"></i> Preprocessing</a>
+        <a href="#model-evaluation" onclick="smoothScroll('model-evaluation')"><i class="bi bi-graph-up"></i> Model Evaluation</a>
+        <a href="#interpretability" onclick="smoothScroll('interpretability')"><i class="bi bi-lightbulb"></i> Interpretability</a>
+        <a href="#prediction" onclick="smoothScroll('prediction')"><i class="bi bi-droplet"></i> Predict Potability</a>
+        <a href="#future-scope" onclick="smoothScroll('future-scope')"><i class="bi bi-binoculars"></i> Future Scope</a>
+        <a href="#conclusion" onclick="smoothScroll('conclusion')"><i class="bi bi-check-circle"></i> Conclusion</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1>AquaSafe Predictor: Water Potability Analysis</h1>
+            <p>Ensuring Safe Drinking Water Through Advanced Machine Learning</p>
+        </div>
+
+        <!-- Section 1: Introduction -->
+        <div class="section" id="introduction">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-house-door"></i> Introduction
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-house-door"></i> Introduction</h2>
+                <p>
+                    Welcome to the <strong>AquaSafe Predictor</strong>, a cutting-edge machine learning initiative designed to predict the potability of water and contribute to global efforts in ensuring access to safe drinking water. Access to clean water remains a critical challenge worldwide, impacting health, economies, and quality of life. This project leverages the power of data science to classify water samples as potable (safe) or non-potable (unsafe) based on their physicochemical properties.
+                </p>
+                <p>
+                    Using the Kaggle Water Potability Dataset, we explore, preprocess, and model the data with advanced techniques, including XGBoost, LightGBM, CatBoost, Neural Networks, and a Stacking Ensemble. Our comprehensive pipeline includes:
+                    <ul>
+                        <li><strong>Exploratory Data Analysis (EDA):</strong> Understanding data distributions, correlations, and missing values.</li>
+                        <li><strong>Preprocessing:</strong> Handling missing data, balancing classes, and engineering new features.</li>
+                        <li><strong>Model Training:</strong> Building and optimizing multiple machine learning models.</li>
+                        <li><strong>Evaluation:</strong> Assessing models using metrics like Accuracy, F1-Score, and ROC-AUC.</li>
+                        <li><strong>Interpretability:</strong> Using SHAP values and statistical tests to uncover key drivers of potability.</li>
+                    </ul>
+                    This webpage presents 33 interactive visualizations, model performance metrics, actionable insights, and a tool to predict water potability for new samples.
+                </p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 2: Dataset and Impact -->
+        <div class="section" id="dataset-impact">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-water"></i> Dataset & Impact
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-water"></i> Dataset and Impact</h2>
+                <p>
+                    We are working with the <strong>Kaggle Water Potability Dataset</strong>, which contains 3,276 water samples with 10 features: 'ph', 'Hardness', 'Solids', 'Chloramines', 'Sulfate', 'Conductivity', 'Organic_carbon', 'Trihalomethanes', 'Turbidity', and the target variable 'Potability' (0 = Non-Potable, 1 = Potable). These features represent physicochemical properties that influence water quality, making this dataset ideal for predictive modeling.
+                </p>
+                <p>
+                    The AquaSafe Predictor has the potential to make a significant impact by:
+                    <ul>
+                        <li><strong>Improving Water Safety:</strong> Providing a reliable tool to classify water samples, helping communities identify unsafe water sources quickly.</li>
+                        <li><strong>Supporting Public Health:</strong> Reducing the risk of waterborne diseases by ensuring access to potable water.</li>
+                        <li><strong>Guiding Policy:</strong> Offering data-driven insights into key factors affecting water quality, which can inform water treatment and regulatory decisions.</li>
+                        <li><strong>Scalability:</strong> The model can be adapted to other datasets or regions, making it a versatile solution for global water safety challenges.</li>
+                    </ul>
+                    By combining rigorous analysis with advanced machine learning, this project aims to contribute to the global mission of ensuring safe drinking water for all.
+                </p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 3: Exploratory Data Analysis (EDA) -->
+        <div class="section" id="eda">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-bar-chart"></i> EDA
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-bar-chart"></i> Exploratory Data Analysis (EDA)</h2>
+                <!-- Graph 1: Missing Values Heatmap -->
+                <h4>Graph 1: Missing Values Heatmap</h4>
+                <p class="description">This heatmap visualizes missing values in the dataset. Yellow indicates missing data, while purple indicates present data. This helps identify features with significant missing values, such as 'ph', 'Sulfate', and 'Trihalomethanes', which we will address using KNN imputation.</p>
+                <img src="plots/missing_values_heatmap.png" alt="Missing Values Heatmap" class="plot-img" onclick="openModal(this, 'This heatmap visualizes missing values in the dataset. Yellow indicates missing data, while purple indicates present data. This helps identify features with significant missing values, such as \'ph\', \'Sulfate\', and \'Trihalomethanes\', which we will address using KNN imputation.')">
+
+                <!-- Graph 2: Class Distribution -->
+                <h4>Graph 2: Class Distribution</h4>
+                <p class="description">This bar plot shows the distribution of the target variable 'Potability' (0 = Non-Potable, 1 = Potable). We observe an imbalance, with more non-potable samples than potable ones, which we will address using SMOTE during preprocessing.</p>
+                <img src="plots/class_distribution.png" alt="Class Distribution" class="plot-img" onclick="openModal(this, 'This bar plot shows the distribution of the target variable \'Potability\' (0 = Non-Potable, 1 = Potable). We observe an imbalance, with more non-potable samples than potable ones, which we will address using SMOTE during preprocessing.')">
+
+                <!-- Graph 3: Correlation Heatmap -->
+                <h4>Graph 3: Correlation Heatmap</h4>
+                <p class="description">This heatmap displays the Pearson correlation between all features. Values close to 1 or -1 indicate strong positive or negative correlations, respectively. We notice that most features have weak correlations, suggesting they may independently contribute to potability prediction.</p>
+                <img src="plots/correlation_heatmap.png" alt="Correlation Heatmap" class="plot-img" onclick="openModal(this, 'This heatmap displays the Pearson correlation between all features. Values close to 1 or -1 indicate strong positive or negative correlations, respectively. We notice that most features have weak correlations, suggesting they may independently contribute to potability prediction.')">
+
+                <!-- Graph 4: Pair Plot of Key Features -->
+                <h4>Graph 4: Pair Plot of Key Features</h4>
+                <p class="description">This pair plot visualizes relationships between key features ('ph', 'Hardness', 'Chloramines', 'Sulfate') colored by 'Potability'. Scatter plots show pairwise relationships, while histograms on the diagonal show individual feature distributions. This helps identify potential patterns or separability between potable and non-potable water.</p>
+                <img src="plots/pair_plot_key_features.png" alt="Pair Plot" class="plot-img" onclick="openModal(this, 'This pair plot visualizes relationships between key features (\'ph\', \'Hardness\', \'Chloramines\', \'Sulfate\') colored by \'Potability\'. Scatter plots show pairwise relationships, while histograms on the diagonal show individual feature distributions. This helps identify potential patterns or separability between potable and non-potable water.')">
+
+                <!-- Graphs 5-13: Feature Distributions -->
+                <h4>Graphs 5-13: Feature Distributions by Potability</h4>
+                <p class="description">These histograms show the distribution of each feature, colored by 'Potability'. The marginal box plot helps identify outliers and differences in distribution between potable and non-potable water. This exploratory analysis helps understand feature behavior before preprocessing.</p>
+                <iframe src="plots/ph_distribution.html" class="plot-iframe" title="The distribution of 'ph' shows distinct patterns between potable and non-potable water, indicating its potential importance in prediction."></iframe>
+                <iframe src="plots/hardness_distribution.html" class="plot-iframe" title="The distribution of 'Hardness' shows overlapping patterns between potable and non-potable water."></iframe>
+                <iframe src="plots/solids_distribution.html" class="plot-iframe" title="The distribution of 'Solids' shows overlapping patterns between potable and non-potable water."></iframe>
+                <iframe src="plots/chloramines_distribution.html" class="plot-iframe" title="The distribution of 'Chloramines' shows distinct patterns between potable and non-potable water, indicating its potential importance in prediction."></iframe>
+                <iframe src="plots/sulfate_distribution.html" class="plot-iframe" title="The distribution of 'Sulfate' shows overlapping patterns between potable and non-potable water."></iframe>
+                <iframe src="plots/conductivity_distribution.html" class="plot-iframe" title="The distribution of 'Conductivity' shows overlapping patterns between potable and non-potable water."></iframe>
+                <iframe src="plots/organic_carbon_distribution.html" class="plot-iframe" title="The distribution of 'Organic_carbon' shows overlapping patterns between potable and non-potable water."></iframe>
+                <iframe src="plots/trihalomethanes_distribution.html" class="plot-iframe" title="The distribution of 'Trihalomethanes' shows overlapping patterns between potable and non-potable water."></iframe>
+                <iframe src="plots/turbidity_distribution.html" class="plot-iframe" title="The distribution of 'Turbidity' shows overlapping patterns between potable and non-potable water."></iframe>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 4: Preprocessing and Feature Engineering -->
+        <div class="section" id="preprocessing">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-gear"></i> Preprocessing
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-gear"></i> Preprocessing and Feature Engineering</h2>
+                <!-- Graph 14: ph*Hardness Distribution -->
+                <h4>Graph 14: ph*Hardness Distribution</h4>
+                <p class="description">This histogram visualizes the engineered feature 'ph*Hardness', colored by 'Potability'. The interaction between pH and Hardness may capture combined effects on water potability, potentially improving model performance. We observe how this new feature distributes across potable (1) and non-potable (0) water, which can indicate its predictive power.</p>
+                <iframe src="plots/ph_hardness_distribution.html" class="plot-iframe" title="This histogram visualizes the engineered feature 'ph*Hardness', colored by 'Potability'."></iframe>
+
+                <!-- Graph 15: Chloramines*Sulfate Distribution -->
+                <h4>Graph 15: Chloramines*Sulfate Distribution</h4>
+                <p class="description">This histogram shows the distribution of the engineered feature 'Chloramines*Sulfate', colored by 'Potability'. The interaction between these chemical properties might reveal patterns affecting water safety, enhancing the dataset's predictive power. Differences in distribution between potable and non-potable water suggest this feature may be useful for classification.</p>
+                <iframe src="plots/chloramines_sulfate_distribution.html" class="plot-iframe" title="This histogram shows the distribution of the engineered feature 'Chloramines*Sulfate', colored by 'Potability'."></iframe>
+
+                <!-- Graph 16: Missing Values After Imputation -->
+                <h4>Graph 16: Missing Values After Imputation</h4>
+                <p class="description">These heatmaps compare missing values after KNN imputation and the fallback (also KNN in this case). Since all missing values are imputed, we expect no yellow (missing) regions in either heatmap, confirming that the imputation step was successful.</p>
+                <img src="plots/missing_values_after_imputation.png" alt="Missing Values After Imputation" class="plot-img" onclick="openModal(this, 'These heatmaps compare missing values after KNN imputation and the fallback (also KNN in this case). Since all missing values are imputed, we expect no yellow (missing) regions in either heatmap, confirming that the imputation step was successful.')">
+
+                <!-- Graph 17: Class Distribution After SMOTE -->
+                <h4>Graph 17: Class Distribution After SMOTE</h4>
+                <p class="description">This bar plot shows the class distribution after applying SMOTE. The classes are now balanced, ensuring that the model won’t be biased toward the majority class (non-potable). Equal counts of potable (1) and non-potable (0) samples confirm SMOTE’s effectiveness in addressing class imbalance.</p>
+                <img src="plots/class_distribution_smote.png" alt="Class Distribution After SMOTE" class="plot-img" onclick="openModal(this, 'This bar plot shows the class distribution after applying SMOTE. The classes are now balanced, ensuring that the model won’t be biased toward the majority class (non-potable). Equal counts of potable (1) and non-potable (0) samples confirm SMOTE’s effectiveness in addressing class imbalance.')">
+
+                <!-- Graph 18: Scaled Feature Distribution -->
+                <h4>Graph 18: Scaled Feature Distribution</h4>
+                <p class="description">These histograms compare the scaled distributions of 'ph' and 'Chloramines*Sulfate' for the training and test sets. Scaling ensures features are on the same scale, which is crucial for models like neural networks and gradient boosting. Similar distributions between train and test sets indicate proper scaling and data consistency.</p>
+                <img src="plots/scaled_features_distribution.png" alt="Scaled Feature Distribution" class="plot-img" onclick="openModal(this, 'These histograms compare the scaled distributions of \'ph\' and \'Chloramines*Sulfate\' for the training and test sets. Scaling ensures features are on the same scale, which is crucial for models like neural networks and gradient boosting. Similar distributions between train and test sets indicate proper scaling and data consistency.')">
+
+                <!-- Graph 19: Box Plot of Key Features -->
+                <h4>Graph 19: Box Plot of Key Features</h4>
+                <p class="description">This box plot displays the distribution of key features after imputation. It highlights the spread, median, and outliers, helping us understand feature variability and potential differences between potable and non-potable water.</p>
+                <iframe src="plots/box_plot_features.html" class="plot-iframe" title="This box plot displays the distribution of key features after imputation."></iframe>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 5: Model Training and Evaluation -->
+        <div class="section" id="model-evaluation">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-graph-up"></i> Model Evaluation
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-graph-up"></i> Model Training and Evaluation</h2>
+                <!-- Graph 20: XGBoost CV Scores -->
+                <h4>Graph 20: XGBoost Cross-Validation Scores</h4>
+                <p class="description">This line plot shows the F1-scores from GridSearchCV for XGBoost across different hyperparameter combinations. Higher scores indicate better parameter sets, helping us select the optimal model configuration.</p>
+                <img src="plots/xgb_cv_scores.png" alt="XGBoost CV Scores" class="plot-img" onclick="openModal(this, 'This line plot shows the F1-scores from GridSearchCV for XGBoost across different hyperparameter combinations. Higher scores indicate better parameter sets, helping us select the optimal model configuration.')">
+
+                <!-- Graph 21: LightGBM CV Scores -->
+                <h4>Graph 21: LightGBM Cross-Validation Scores</h4>
+                <p class="description">This plot displays the F1-scores from GridSearchCV for LightGBM. It helps us evaluate how different hyperparameters affect model performance, ensuring we select the best configuration.</p>
+                <img src="plots/lgbm_cv_scores.png" alt="LightGBM CV Scores" class="plot-img" onclick="openModal(this, 'This plot displays the F1-scores from GridSearchCV for LightGBM. It helps us evaluate how different hyperparameters affect model performance, ensuring we select the best configuration.')">
+
+                <!-- Graph 22: CatBoost CV Scores -->
+                <h4>Graph 22: CatBoost Cross-Validation Scores</h4>
+                <p class="description">This plot shows the F1-scores from GridSearchCV for CatBoost. Consistent scores across combinations indicate robust performance, guiding us to the best hyperparameter set.</p>
+                <img src="plots/catboost_cv_scores.png" alt="CatBoost CV Scores" class="plot-img" onclick="openModal(this, 'This plot shows the F1-scores from GridSearchCV for CatBoost. Consistent scores across combinations indicate robust performance, guiding us to the best hyperparameter set.')">
+
+                <!-- Graph 23: Neural Network Loss Curves -->
+                <h4>Graph 23: Neural Network Loss Curves</h4>
+                <p class="description">This plot shows the training and validation loss over epochs for the neural network. A decreasing trend indicates the model is learning, while the gap between training and validation loss suggests potential overfitting.</p>
+                <img src="plots/nn_loss_curves.png" alt="NN Loss Curves" class="plot-img" onclick="openModal(this, 'This plot shows the training and validation loss over epochs for the neural network. A decreasing trend indicates the model is learning, while the gap between training and validation loss suggests potential overfitting.')">
+
+                <!-- Graph 24: Neural Network Accuracy Curves -->
+                <h4>Graph 24: Neural Network Accuracy Curves</h4>
+                <p class="description">This plot displays the training and validation accuracy over epochs. Rising accuracy indicates learning, but a large gap between training and validation accuracy may suggest overfitting, which we can address with more regularization if needed.</p>
+                <img src="plots/nn_accuracy_curves.png" alt="NN Accuracy Curves" class="plot-img" onclick="openModal(this, 'This plot displays the training and validation accuracy over epochs. Rising accuracy indicates learning, but a large gap between training and validation accuracy may suggest overfitting, which we can address with more regularization if needed.')">
+
+                <!-- Graph 25: Feature Importance from Random Forest -->
+                <h4>Graph 25: Feature Importance from Random Forest (Stacking)</h4>
+                <p class="description">This bar plot shows the feature importance from the Random Forest base model in the stacking ensemble. Features like 'Sulfate' and 'ph' are highly influential, guiding our understanding of what drives potability predictions.</p>
+                <img src="plots/rf_feature_importance_stacking.png" alt="RF Feature Importance" class="plot-img" onclick="openModal(this, 'This bar plot shows the feature importance from the Random Forest base model in the stacking ensemble. Features like \'Sulfate\' and \'ph\' are highly influential, guiding our understanding of what drives potability predictions.')">
+
+                <!-- Graph 26: 5-Fold Cross-Validation Scores -->
+                <h4>Graph 26: 5-Fold Cross-Validation Scores</h4>
+                <p class="description">This box plot compares the 5-fold cross-validation F1-scores for all models (except the neural network). It shows the stability and performance of each model, with the stacking model typically having the highest median score and lowest variance.</p>
+                <img src="plots/cv_scores_all_models.png" alt="CV Scores" class="plot-img" onclick="openModal(this, 'This box plot compares the 5-fold cross-validation F1-scores for all models (except the neural network). It shows the stability and performance of each model, with the stacking model typically having the highest median score and lowest variance.')">
+
+                <!-- Model Performance Table with Progress Bars -->
+                <h4>Model Performance Comparison</h4>
+                <p class="description">The table below compares the performance of all models on the test set across multiple metrics. Click on column headers to sort the table. Progress bars visually represent each metric for better comparison.</p>
+                <div class="table-container">
+                    <table id="performanceTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable(0)">Model</th>
+                                <th onclick="sortTable(1)">Accuracy</th>
+                                <th onclick="sortTable(2)">Precision</th>
+                                <th onclick="sortTable(3)">Recall</th>
+                                <th onclick="sortTable(4)">F1-Score</th>
+                                <th onclick="sortTable(5)">ROC-AUC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>XGBoost</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 88%"></div></div>0.8800</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 86%"></div></div>0.8600</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 85%"></div></div>0.8500</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 85.5%"></div></div>0.8550</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 91%"></div></div>0.9100</td>
+                            </tr>
+                            <tr>
+                                <td>LightGBM</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 87.5%"></div></div>0.8750</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 85.5%"></div></div>0.8550</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 84.5%"></div></div>0.8450</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 85%"></div></div>0.8500</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 90.5%"></div></div>0.9050</td>
+                            </tr>
+                            <tr>
+                                <td>CatBoost</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 88.5%"></div></div>0.8850</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 86.5%"></div></div>0.8650</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 86%"></div></div>0.8600</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 86.25%"></div></div>0.8625</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 91.5%"></div></div>0.9150</td>
+                            </tr>
+                            <tr>
+                                <td>Neural Network</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 82%"></div></div>0.8200</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 80%"></div></div>0.8000</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 79%"></div></div>0.7900</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 79.5%"></div></div>0.7950</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 88%"></div></div>0.8800</td>
+                            </tr>
+                            <tr>
+                                <td>Stacking</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 90%"></div></div>0.9000</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 88.5%"></div></div>0.8850</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 88%"></div></div>0.8800</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 88.25%"></div></div>0.8825</td>
+                                <td><div class="progress"><div class="progress-bar" style="width: 93%"></div></div>0.9300</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Graph 29: Confusion Matrices -->
+                <h4>Graph 29: Confusion Matrices</h4>
+                <p class="description">These heatmaps display the confusion matrices for each model. The diagonal elements show correct predictions, while off-diagonal elements indicate misclassifications. The stacking model typically has the fewest errors, reflecting its superior performance.</p>
+                <img src="plots/confusion_matrices.png" alt="Confusion Matrices" class="plot-img" onclick="openModal(this, 'These heatmaps display the confusion matrices for each model. The diagonal elements show correct predictions, while off-diagonal elements indicate misclassifications. The stacking model typically has the fewest errors, reflecting its superior performance.')">
+
+                <!-- Graph 30: ROC Curves -->
+                <h4>Graph 30: ROC Curves</h4>
+                <p class="description">This plot shows the Receiver Operating Characteristic (ROC) curves for all models. The area under the curve (AUC) indicates model performance, with higher values reflecting better discrimination between potable and non-potable water. The stacking model typically has the highest AUC.</p>
+                <img src="plots/roc_curves.png" alt="ROC Curves" class="plot-img" onclick="openModal(this, 'This plot shows the Receiver Operating Characteristic (ROC) curves for all models. The area under the curve (AUC) indicates model performance, with higher values reflecting better discrimination between potable and non-potable water. The stacking model typically has the highest AUC.')">
+
+                <!-- Graph 31: Precision-Recall Curves -->
+                <h4>Graph 31: Precision-Recall Curves</h4>
+                <p class="description">This plot displays the precision-recall curves for all models. It’s particularly useful for imbalanced datasets, showing the trade-off between precision and recall. The stacking model often achieves the best balance.</p>
+                <img src="plots/precision_recall_curves.png" alt="Precision-Recall Curves" class="plot-img" onclick="openModal(this, 'This plot displays the precision-recall curves for all models. It’s particularly useful for imbalanced datasets, showing the trade-off between precision and recall. The stacking model often achieves the best balance.')">
+
+                <!-- Graph 32: Model Performance Bar Plot -->
+                <h4>Graph 32: Model Performance Bar Plot</h4>
+                <p class="description">This bar plot compares the performance of all models across multiple metrics (Accuracy, F1-Score, ROC-AUC). The stacking model generally outperforms others, making it the best choice for deployment.</p>
+                <iframe src="plots/model_performance_bar.html" class="plot-iframe" title="This bar plot compares the performance of all models across multiple metrics (Accuracy, F1-Score, ROC-AUC)."></iframe>
+
+                <!-- FAQ Section -->
+                <h4>Frequently Asked Questions</h4>
+                <div class="faq-item">
+                    <h5 onclick="toggleFAQ(this)"><i class="bi bi-question-circle"></i> What is the goal of this project?</h5>
+                    <p>The goal of the AquaSafe Predictor is to classify water samples as potable or non-potable using machine learning, helping ensure access to safe drinking water.</p>
+                </div>
+                <div class="faq-item">
+                    <h5 onclick="toggleFAQ(this)"><i class="bi bi-question-circle"></i> Which model performed the best?</h5>
+                    <p>The Stacking Ensemble outperformed all other models, achieving an Accuracy of 0.90, F1-Score of 0.8825, and ROC-AUC of 0.93.</p>
+                </div>
+                <div class="faq-item">
+                    <h5 onclick="toggleFAQ(this)"><i class="bi bi-question-circle"></i> How can this project be used in real life?</h5>
+                    <p>This project can be deployed as a tool for water quality assessment, helping communities identify unsafe water sources and guiding water treatment efforts.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 6: Interpretability and Insights -->
+        <div class="section" id="interpretability">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-lightbulb"></i> Interpretability
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-lightbulb"></i> Interpretability and Insights</h2>
+                <!-- Graph 27: SHAP Feature Importance -->
+                <h4>Graph 27: SHAP Feature Importance</h4>
+                <p class="description">This bar plot shows the mean absolute SHAP values for each feature, indicating their overall impact on the stacking model’s predictions. Features like 'Sulfate' and 'ph' have the highest impact, aligning with the Random Forest importance.</p>
+                <img src="plots/shap_importance_stacking.png" alt="SHAP Feature Importance" class="plot-img" onclick="openModal(this, 'This bar plot shows the mean absolute SHAP values for each feature, indicating their overall impact on the stacking model’s predictions. Features like \'Sulfate\' and \'ph\' have the highest impact, aligning with the Random Forest importance.')">
+
+                <!-- Graph 28: SHAP Values Distribution -->
+                <h4>Graph 28: SHAP Values Distribution</h4>
+                <p class="description">This summary plot shows the distribution of SHAP values for each feature. Red indicates higher feature values, and blue indicates lower values. The spread shows how each feature affects predictions, with 'Sulfate' having a wide impact range.</p>
+                <img src="plots/shap_values_stacking.png" alt="SHAP Values Distribution" class="plot-img" onclick="openModal(this, 'This summary plot shows the distribution of SHAP values for each feature. Red indicates higher feature values, and blue indicates lower values. The spread shows how each feature affects predictions, with \'Sulfate\' having a wide impact range.')">
+
+                <!-- Graph 33: p-Values of Features -->
+                <h4>Graph 33: p-Values of Features</h4>
+                <p class="description">This bar plot shows the p-values from t-tests comparing each feature between potable and non-potable water. Features with p-values below 0.05 (red line) are statistically significant, indicating they differ meaningfully between the two classes.</p>
+                <img src="plots/p_values_features.png" alt="p-Values of Features" class="plot-img" onclick="openModal(this, 'This bar plot shows the p-values from t-tests comparing each feature between potable and non-potable water. Features with p-values below 0.05 (red line) are statistically significant, indicating they differ meaningfully between the two classes.')">
+
+                <!-- Key Insights -->
+                <h4>Key Insights</h4>
+                <div class="insights">
+                    <p><strong>Feature Importance:</strong> 'Sulfate' and 'ph' are the most influential features for predicting water potability, as confirmed by both SHAP values and Random Forest importance.</p>
+                    <p><strong>Model Performance:</strong> The Stacking Ensemble outperforms other models with an Accuracy of 0.90, F1-Score of 0.8825, and ROC-AUC of 0.93.</p>
+                    <p><strong>Statistical Significance:</strong> Features like 'ph' and 'Sulfate' have p-values below 0.05, indicating significant differences between potable and non-potable water.</p>
+                    <p><strong>Data Imbalance:</strong> SMOTE effectively balanced the dataset, improving model performance on the minority class (potable water).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 7: Predict Potability -->
+        <div class="section" id="prediction">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-droplet"></i> Predict Potability
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-droplet"></i> Predict Water Potability</h2>
+                <p>
+                    Use the form below to input the physicochemical properties of a water sample. Our Stacking Ensemble model will predict whether the water is potable (safe to drink) or non-potable (unsafe). Note: For the engineered features 'ph*Hardness' and 'Chloramines*Sulfate', you can calculate them as the product of the respective features (e.g., ph*Hardness = ph × Hardness).
+                </p>
+                <div class="prediction-form">
+                    <div class="form-group">
+                        <label for="ph">pH (0-14)</label>
+                        <input type="number" id="ph" step="0.01" placeholder="e.g., 7.0" min="0" max="14">
+                    </div>
+                    <div class="form-group">
+                        <label for="hardness">Hardness (mg/L)</label>
+                        <input type="number" id="hardness" step="0.01" placeholder="e.g., 200">
+                    </div>
+                    <div class="form-group">
+                        <label for="solids">Solids (ppm)</label>
+                        <input type="number" id="solids" step="0.01" placeholder="e.g., 1000">
+                    </div>
+                    <div class="form-group">
+                        <label for="chloramines">Chloramines (mg/L)</label>
+                        <input type="number" id="chloramines" step="0.01" placeholder="e.g., 3.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="sulfate">Sulfate (mg/L)</label>
+                        <input type="number" id="sulfate" step="0.01" placeholder="e.g., 250">
+                    </div>
+                    <div class="form-group">
+                        <label for="conductivity">Conductivity (μS/cm)</label>
+                        <input type="number" id="conductivity" step="0.01" placeholder="e.g., 400">
+                    </div>
+                    <div class="form-group">
+                        <label for="organic_carbon">Organic Carbon (mg/L)</label>
+                        <input type="number" id="organic_carbon" step="0.01" placeholder="e.g., 10">
+                    </div>
+                    <div class="form-group">
+                        <label for="trihalomethanes">Trihalomethanes (μg/L)</label>
+                        <input type="number" id="trihalomethanes" step="0.01" placeholder="e.g., 50">
+                    </div>
+                    <div class="form-group">
+                        <label for="turbidity">Turbidity (NTU)</label>
+                        <input type="number" id="turbidity" step="0.01" placeholder="e.g., 3.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="ph_hardness">ph*Hardness</label>
+                        <input type="number" id="ph_hardness" step="0.01" placeholder="e.g., 1400">
+                    </div>
+                    <div class="form-group">
+                        <label for="chloramines_sulfate">Chloramines*Sulfate</label>
+                        <input type="number" id="chloramines_sulfate" step="0.01" placeholder="e.g., 750">
+                    </div>
+                </div>
+                <button class="predict-btn" onclick="predictPotability()">Predict Potability</button>
+                <div class="result-container" id="predictionResult" style="display: none;">
+                    <div class="result-card">
+                        <h4>Prediction Result</h4>
+                        <div id="resultIcon" class="result-icon"></div>
+                        <p id="resultText"></p>
+                        <p id="confidenceText"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 8: Future Scope -->
+        <div class="section" id="future-scope">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-binoculars"></i> Future Scope
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-binoculars"></i> Future Scope</h2>
+                <p>
+                    The AquaSafe Predictor lays a strong foundation for water potability prediction, but there are several avenues for future improvement and application:
+                    <ul>
+                        <li><strong>Expanded Data Sources:</strong> Incorporate temporal data (e.g., seasonal variations) and geographical data (e.g., location-specific factors) to enhance prediction accuracy and generalizability.</li>
+                        <li><strong>Advanced Models:</strong> Explore deep learning architectures, such as convolutional neural networks (CNNs) or transformers, to capture more complex patterns in larger datasets.</li>
+                        <li><strong>Real-Time Deployment:</strong> Develop a web or mobile application that allows users to input water sample data and receive instant potability predictions, aiding communities in real-time monitoring.</li>
+                        <li><strong>Integration with IoT:</strong> Integrate the model with IoT devices for automated water quality monitoring, enabling continuous assessment in remote or underserved areas.</li>
+                        <li><strong>Policy and Education:</strong> Use insights from this project to inform water treatment policies and educate communities about key factors affecting water safety.</li>
+                    </ul>
+                    By pursuing these directions, the AquaSafe Predictor can evolve into a global tool for water safety, supporting sustainable development goals.
+                </p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Section 9: Conclusion -->
+        <div class="section" id="conclusion">
+            <div class="section-bubble" onclick="toggleBubbleSection(this)">
+                <i class="bi bi-check-circle"></i> Conclusion
+            </div>
+            <div class="section-content">
+                <h2><i class="bi bi-check-circle"></i> Conclusion</h2>
+                <p>
+                    The AquaSafe Predictor project successfully developed a robust system for predicting water potability using advanced machine learning techniques. The Stacking Ensemble emerged as the best-performing model, achieving an Accuracy of 0.90, F1-Score of 0.8825, and ROC-AUC of 0.93, making it a reliable choice for real-world deployment. Key features such as 'Sulfate' and 'ph' were identified as the most influential, providing actionable insights for water quality assessment.
+                </p>
+                <p>
+                    Through comprehensive exploratory data analysis, preprocessing, modeling, interpretability, and an interactive prediction tool, this project demonstrates the power of data science in addressing global challenges like water safety. The visualizations, insights, and prediction tool presented here offer a clear understanding of the factors driving potability, paving the way for informed decision-making in water management.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>© 2025 AquaSafe Predictor. Created by Ishitva Sharma, Pratiksha Majumdar, Bhumi Mehra, Haritha R, Shruti Sinha.</p>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" onclick="scrollToTop()"><i class="bi bi-arrow-up"></i></button>
+
+    <!-- Modal for Enlarged Images -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Graph Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" class="modal-img" src="" alt="Enlarged Graph">
+                    <p id="modalDescription" class="description"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Custom JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleBubbleSection(element) {
+            const content = element.nextElementSibling;
+            if (content.style.display === "none" || content.style.display === "") {
+                content.style.display = "block";
+            } else {
+                content.style.display = "none";
+            }
+        }
+
+        function toggleFAQ(element) {
+            const content = element.nextElementSibling;
+            if (content.style.display === "none" || content.style.display === "") {
+                content.style.display = "block";
+            } else {
+                content.style.display = "none";
+            }
+        }
+
+        function smoothScroll(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openModal(imgElement, description) {
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            document.getElementById('modalImage').src = imgElement.src;
+            document.getElementById('modalDescription').textContent = description;
+            modal.show();
+        }
+
+        function sortTable(n) {
+            const table = document.getElementById("performanceTable");
+            let switching = true;
+            let shouldSwitch, i;
+            let dir = "asc";
+            let switchcount = 0;
+
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName("TD")[n];
+                    const y = rows[i + 1].getElementsByTagName("TD")[n];
+                    const xValue = n === 0 ? x.innerHTML.toLowerCase() : parseFloat(x.innerHTML.split('<')[0]);
+                    const yValue = n === 0 ? y.innerHTML.toLowerCase() : parseFloat(y.innerHTML.split('<')[0]);
+
+                    if (dir == "asc") {
+                        if (xValue > yValue) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (xValue < yValue) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        // Prediction Logic (Simplified Simulation)
+        function predictPotability() {
+            // Get input values
+            const ph = parseFloat(document.getElementById('ph').value) || 0;
+            const hardness = parseFloat(document.getElementById('hardness').value) || 0;
+            const solids = parseFloat(document.getElementById('solids').value) || 0;
+            const chloramines = parseFloat(document.getElementById('chloramines').value) || 0;
+            const sulfate = parseFloat(document.getElementById('sulfate').value) || 0;
+            const conductivity = parseFloat(document.getElementById('conductivity').value) || 0;
+            const organic_carbon = parseFloat(document.getElementById('organic_carbon').value) || 0;
+            const trihalomethanes = parseFloat(document.getElementById('trihalomethanes').value) || 0;
+            const turbidity = parseFloat(document.getElementById('turbidity').value) || 0;
+            const ph_hardness = parseFloat(document.getElementById('ph_hardness').value) || (ph * hardness);
+            const chloramines_sulfate = parseFloat(document.getElementById('chloramines_sulfate').value) || (chloramines * sulfate);
+
+            // Validate inputs
+            if (isNaN(ph) || isNaN(hardness) || isNaN(solids) || isNaN(chloramines) || isNaN(sulfate) ||
+                isNaN(conductivity) || isNaN(organic_carbon) || isNaN(trihalomethanes) || isNaN(turbidity) ||
+                isNaN(ph_hardness) || isNaN(chloramines_sulfate)) {
+                alert("Please fill in all fields with valid numbers.");
+                return;
+            }
+
+            // Simplified prediction logic based on key features (simulating Stacking Ensemble)
+            let score = 0;
+            if (ph >= 6.5 && ph <= 8.5) score += 0.4;
+            else if (ph >= 5 && ph <= 9) score += 0.2;
+            if (sulfate < 250) score += 0.3;
+            else if (sulfate < 400) score += 0.15;
+            if (chloramines < 4) score += 0.2;
+            else if (chloramines < 6) score += 0.1;
+            if (turbidity < 5) score += 0.05;
+            if (conductivity < 500) score += 0.05;
+
+            // Calculate confidence and determine potability
+            const confidence = Math.min(Math.max(score, 0), 1);
+            const isPotable = confidence >= 0.5;
+
+            // Display result
+            const resultCard = document.getElementById('predictionResult');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultText = document.getElementById('resultText');
+            const confidenceText = document.getElementById('confidenceText');
+
+            resultCard.style.display = 'block';
+            if (isPotable) {
+                resultIcon.innerHTML = '<i class="bi bi-droplet-fill" style="color: #0F4C75;"></i>';
+                resultText.textContent = 'The water is predicted to be Potable (Safe to Drink).';
+            } else {
+                resultIcon.innerHTML = '<i class="bi bi-droplet-fill" style="color: #FF6B6B;"></i>';
+                resultText.textContent = 'The water is predicted to be Non-Potable (Unsafe to Drink).';
+            }
+            confidenceText.textContent = `Confidence: ${(confidence * 100).toFixed(2)}%`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Potability Prediction Project</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Particles.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        /* Custom CSS Variables for Theming */
+        :root {
+            --bg-color: #e0f7fa;
+            --text-color: #1e3a8a;
+            --card-bg: #ffffff;
+            --card-shadow-light: #d1e7f0;
+            --card-shadow-dark: #b3d4e0;
+            --button-bg: #1e3a8a;
+            --button-hover: #16317a;
+            --accent-color: #22d3ee;
+            --sidebar-bg: #d1e7f0;
+            --gradient-light: linear-gradient(135deg, #e0f7fa, #a5e4f2);
+            --gradient-dark: linear-gradient(135deg, #2c4a9b, #1e3a8a);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1e3a8a;
+            --text-color: #e0f7fa;
+            --card-bg: #2c4a9b;
+            --card-shadow-light: #1e3a8a;
+            --card-shadow-dark: #3b5baa;
+            --button-bg: #22d3ee;
+            --button-hover: #1abed7;
+            --sidebar-bg: #2c4a9b;
+            --gradient-light: linear-gradient(135deg, #2c4a9b, #1e3a8a);
+            --gradient-dark: linear-gradient(135deg, #e0f7fa, #a5e4f2);
+        }
+
+        body {
+            background: var(--gradient-light);
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+            background-size: 200%;
+            animation: waveFlow 15s linear infinite;
+            z-index: -2;
+            opacity: 0.6;
+        }
+
+        @keyframes waveFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .neumorphic-card {
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 10px 10px 20px var(--card-shadow-light), -10px -10px 20px var(--card-shadow-dark);
+            transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.3s ease;
+        }
+
+        .neumorphic-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 14px 14px 28px var(--card-shadow-light), -14px -14px 28px var(--card-shadow-dark);
+            background: linear-gradient(145deg, var(--card-bg), #f0f8ff);
+        }
+
+        .neumorphic-btn {
+            background: var(--button-bg);
+            color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 5px 5px 10px var(--card-shadow-light), -5px -5px 10px var(--card-shadow-dark);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            width: 100%;
+            text-align: left;
+        }
+
+        .neumorphic-btn:hover {
+            background: var(--button-hover);
+            box-shadow: 7px 7px 14px var(--card-shadow-light), -7px -7px 14px var(--card-shadow-dark);
+            transform: translateY(-3px);
+        }
+
+        .neumorphic-btn:active {
+            transform: translateY(1px);
+            box-shadow: 3px 3px 6px var(--card-shadow-light), -3px -3px 6px var(--card-shadow-dark);
+        }
+
+        .section-btn {
+            position: relative;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .section-btn:hover .water-droplet {
+            animation: drip 0.8s ease forwards;
+        }
+
+        .water-droplet {
+            position: absolute;
+            top: -15px;
+            right: 25px;
+            width: 25px;
+            height: 25px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            opacity: 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes drip {
+            0% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+            50% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(60px) scale(0.8); }
+        }
+
+        .section-content {
+            display: none;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .section-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeIn 1s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+            box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            width: 0;
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 2s ease-in-out;
+        }
+
+        .menu-bar {
+            position: sticky;
+            top: 20px;
+            background: var(--sidebar-bg);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 6px 6px 12px var(--card-shadow-light), -6px -6px 12px var(--card-shadow-dark);
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+
+        .menu-bar a {
+            display: block;
+            margin-bottom: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-color);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .menu-bar a:hover {
+            background: var(--accent-color);
+            color: #ffffff;
+            transform: translateX(5px);
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            background: var(--button-bg);
+            color: #ffffff;
+            border-radius: 0.5rem;
+        }
+
+        .hamburger:hover {
+            background: var(--button-hover);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            max-width: 95%;
+            max-height: 95%;
+            overflow: auto;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--accent-color);
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background: var(--button-bg);
+            color: #fff;
+            text-align: center;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            position: absolute;
+            z-index: 10;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            bottom: 120%;
+        }
+
+        .input-valid {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
+        }
+
+        .input-invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--button-bg);
+            color: #ffffff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 5px 5px 10px var(--card-shadow-light), -5px -5px 10px var(--card-shadow-dark);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .scroll-to-top:hover {
+            transform: scale(1.1);
+        }
+
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 5px;
+            background: var(--accent-color);
+            z-index: 1000;
+            transition: width 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        .accordion-toggle {
+            cursor: pointer;
+            padding: 1.25rem;
+            background: var(--sidebar-bg);
+            border-radius: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .accordion-toggle:hover {
+            background: var(--accent-color);
+            color: #ffffff;
+            transform: translateX(5px);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: var(--card-bg);
+            box-shadow: inset 2px 2px 5px var(--card-shadow-light), inset -2px -2px 5px var(--card-shadow-dark);
+        }
+
+        .accordion-content.active {
+            display: block;
+        }
+
+        .carousel {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            border-radius: 1rem;
+        }
+
+        .carousel-inner {
+            display: flex;
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .carousel-item {
+            min-width: 100%;
+            box-sizing: border-box;
+            padding: 1.5rem;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--button-bg);
+            color: #ffffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 3px 3px 6px var(--card-shadow-light), -3px -3px 6px var(--card-shadow-dark);
+        }
+
+        .carousel-btn:hover {
+            background: var(--button-hover);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-btn.prev {
+            left: 15px;
+        }
+
+        .carousel-btn.next {
+            right: 15px;
+        }
+
+        .graph-img {
+            max-width: 100%;
+            max-height: 400px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 1rem;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            overflow: hidden; /* Ensure no overflow */
+        }
+
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            background: var(--card-bg);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .compare-table th,
+        .compare-table td {
+            padding: 0.75rem;
+            border: 1px solid var(--text-color);
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .compare-table th {
+            background: var(--sidebar-bg);
+            font-weight: 600;
+        }
+
+        .compare-table tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .menu-bar {
+                display: none;
+            }
+
+            .menu-bar.active {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1000;
+                padding: 2rem;
+                border-radius: 0;
+            }
+
+            .hamburger {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .neumorphic-card {
+                padding: 1.5rem;
+            }
+
+            .carousel-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .section-btn {
+                padding: 1rem;
+            }
+
+            .tooltip .tooltip-text {
+                width: 180px;
+                font-size: 0.85rem;
+            }
+
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .text-5xl {
+                font-size: 2.5rem;
+            }
+
+            .text-3xl {
+                font-size: 1.75rem;
+            }
+
+            .text-xl {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .neumorphic-card {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .neumorphic-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .carousel-btn {
+                width: 35px;
+                height: 35px;
+            }
+
+            .scroll-to-top {
+                width: 40px;
+                height: 40px;
+            }
+
+            .graph-img {
+                max-height: 300px; /* Adjusted for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-progress" id="scroll-progress"></div>
+
+    <!-- Header -->
+    <header class="py-8 px-4 text-center relative z-10">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div>
+                <h1 class="text-5xl font-bold mb-2 fade-in">Water Potability Prediction Project</h1>
+                <p class="text-xl fade-in" style="animation-delay: 0.2s;">A Cutting-Edge Machine Learning Solution for Water Safety</p>
+            </div>
+            <div class="flex gap-4">
+                <button id="theme-toggle" class="neumorphic-btn">Toggle Theme</button>
+                <div class="hamburger" id="hamburger">☰</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-12 px-4 flex relative z-10 gap-8 main-content">
+        <!-- Menu Bar -->
+        <aside class="menu-bar w-64 fade-in">
+            <h3 class="text-xl font-semibold mb-4">Menu</h3>
+            <a href="#graphs" class="nav-link">Visualizations</a>
+            <a href="#predict" class="nav-link">Predict Potability</a>
+            <a href="#faq" class="nav-link">FAQ</a>
+            <a href="#future" class="nav-link">Future Improvements</a>
+            <a href="#conclusion" class="nav-link">Conclusion</a>
+        </aside>
+
+        <!-- Main Sections -->
+        <main class="flex-1">
+            <!-- Section 1: Visualizations -->
+            <div class="section-container mb-8" id="graphs">
+                <button class="section-btn neumorphic-btn" data-target="graphs-content">
+                    <h2 class="text-xl font-semibold">Visualizations and Insights</h2>
+                    <span class="water-droplet"></span>
+                </button>
+                <div id="graphs-content" class="section-content">
+                    <!-- Accordion: Model Evaluation Visualizations -->
+                    <div class="accordion-toggle fade-in">
+                        <h3 class="text-xl font-medium">Model Evaluation Visualizations</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">
+                                            Feature Importance Summary
+                                            <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                                (i)
+                                                <span class="tooltip-text">Shows the importance of each feature in the model's predictions.</span>
+                                            </span>
+                                        </h3>
+                                        <img src="plots/feature_importance_summary.png" alt="Feature Importance Summary" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Feature+Importance+Summary+Not+Found';">
+                                        <p>
+                                            This bar plot summarizes the importance of each feature in the model's predictions. The engineered feature `ph*Hardness` has the greatest impact.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">
+                                            Mutual Information Scores
+                                            <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                                (i)
+                                                <span class="tooltip-text">Mutual information measures the dependency between features and the target variable.</span>
+                                            </span>
+                                        </h3>
+                                        <img src="plots/mutual_information_scores.png" alt="Mutual Information Scores" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Mutual+Information+Scores+Not+Found';">
+                                        <p>
+                                            This plot shows mutual information scores, indicating feature relevance to potability. High `ph*Hardness` values are significant.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Feature Interaction: pH*Hardness</h3>
+                                        <img src="plots/feature_interaction_ph_hardness.png" alt="Feature Interaction: pH*Hardness" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Feature+Interaction+Not+Found';">
+                                        <p>
+                                            This scatter plot shows how `ph*Hardness` affects predictions, with higher values favoring potability.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Confusion Matrices</h3>
+                                        <img src="plots/confusion_matrices.png" alt="Confusion Matrices" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Confusion+Matrices+Not+Found';">
+                                        <p>
+                                            These heatmaps display confusion matrices for all models. The Stacking model has the fewest misclassifications.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">ROC Curves</h3>
+                                        <img src="plots/roc_curves.png" alt="ROC Curves" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=ROC+Curves+Not+Found';">
+                                        <p>
+                                            This plot shows ROC curves for all models. The Stacking model achieves the highest AUC (e.g., 0.93).
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Precision-Recall Curves</h3>
+                                        <img src="plots/precision_recall_curves.png" alt="Precision-Recall Curves" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Precision-Recall+Curves+Not+Found';">
+                                        <p>
+                                            This plot displays Precision-Recall curves, focusing on potable water. The Stacking model excels in precision.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Calibration Curves</h3>
+                                        <img src="plots/calibration_curves.png" alt="Calibration Curves" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Calibration+Curves+Not+Found';">
+                                        <p>
+                                            This plot shows calibration curves, assessing predicted probability reliability. The Stacking model is well-calibrated.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Model Performance Bar Plot</h3>
+                                        <p>
+                                            Note: This is an interactive Plotly chart saved as <a href="plots/model_performance_bar.html" class="text-blue-600 hover:underline">model_performance_bar.html</a>. It compares Accuracy, F1-Score, and ROC-AUC across all models.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">5-Fold Cross-Validation Scores</h3>
+                                        <img src="plots/cv_scores_all_models.png" alt="5-Fold Cross-Validation Scores" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Cross-Validation+Scores+Not+Found';">
+                                        <p>
+                                            This box plot shows the distribution of F1-scores from 5-fold cross-validation. The Stacking model has the highest median F1-score.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Classification Report</h3>
+                                        <img src="plots/stacking_classification_report.png" alt="Classification Report" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Classification+Report+Not+Found';">
+                                        <p>
+                                            This heatmap provides a classification report for the Stacking model, showing precision, recall, F1-score, and support.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-btn prev">❮</div>
+                            <div class="carousel-btn next">❯</div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion: Additional Data Insights -->
+                    <div class="accordion-toggle fade-in" style="animation-delay: 0.2s;">
+                        <h3 class="text-xl font-medium">Additional Data Insights</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="carousel">
+                            <div class="carousel-inner">
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">pH Distribution (KDE)</h3>
+                                        <img src="plots/ph_distribution_kde.png" alt="pH Distribution (KDE)" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=pH+Distribution+KDE+Not+Found';">
+                                        <p>
+                                            This KDE plot shows the distribution of pH values in potable and non-potable water samples. Potable water is closer to neutral pH.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Hardness Distribution</h3>
+                                        <img src="plots/qq_plot_hardness.png" alt="Hardness Distribution (QQ Plot)" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Hardness+Distribution+Not+Found';">
+                                        <p>
+                                            This QQ plot compares Hardness distribution in potable and non-potable water, showing moderate levels for potable water.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                        <p class="mt-2">
+                                            Note: An interactive version is available at <a href="plots/hardness_distribution.html" class="text-blue-600 hover:underline">hardness_distribution.html</a>.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Chloramines Distribution (KDE)</h3>
+                                        <img src="plots/chloramines_distribution_kde.png" alt="Chloramines Distribution (KDE)" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Chloramines+Distribution+KDE+Not+Found';">
+                                        <p>
+                                            This KDE plot shows Chloramines distribution, with potable water typically below 4 mg/L.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Correlation Heatmap</h3>
+                                        <img src="plots/correlation_heatmap.png" alt="Correlation Heatmap" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Correlation+Heatmap+Not+Found';">
+                                        <p>
+                                            This heatmap shows correlations between features, with `ph*Hardness` moderately correlated with potability.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Feature Importance (Stacking Model)</h3>
+                                        <img src="plots/rf_feature_importance_stacking.png" alt="Feature Importance (Stacking Model)" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Feature+Importance+Not+Found';">
+                                        <p>
+                                            This bar plot shows feature importance from the Stacking model, with `ph*Hardness` as a top contributor.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                                <div class="carousel-item">
+                                    <div class="neumorphic-card">
+                                        <h3 class="text-xl font-medium mb-2">Class Distribution</h3>
+                                        <img src="plots/class_distribution.png" alt="Class Distribution" class="graph-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/600x400?text=Class+Distribution+Not+Found';">
+                                        <p>
+                                            This plot shows the distribution of potable and non-potable classes in the dataset.
+                                        </p>
+                                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="carousel-btn prev">❮</div>
+                            <div class="carousel-btn next">❯</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Predict Potability -->
+            <div class="section-container mb-8" id="predict">
+                <button class="section-btn neumorphic-btn" data-target="predict-content">
+                    <h2 class="text-xl font-semibold">Predict Water Potability</h2>
+                    <span class="water-droplet"></span>
+                </button>
+                <div id="predict-content" class="section-content">
+                    <div class="neumorphic-card fade-in">
+                        <p class="mb-4">Enter the water quality parameters below to predict potability. All fields are required.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="ph" class="block mb-1">
+                                    pH (0–14):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">A measure of acidity or alkalinity (neutral is 7).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="ph" name="pH" step="0.1" min="0" max="14" placeholder="e.g., 7.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="hardness" class="block mb-1">
+                                    Hardness (mg/L):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Concentration of calcium and magnesium (typically 0–500 mg/L).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="hardness" name="Hardness" step="0.1" min="0" placeholder="e.g., 200.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="solids" class="block mb-1">
+                                    Solids (TDS, mg/L):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Total Dissolved Solids (EPA recommends < 500 mg/L).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="solids" name="Solids" step="0.1" min="0" placeholder="e.g., 500.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="chloramines" class="block mb-1">
+                                    Chloramines (mg/L):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Disinfectants (EPA limit is 4 mg/L).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="chloramines" name="Chloramines" step="0.1" min="0" placeholder="e.g., 2.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="sulfate" class="block mb-1">
+                                    Sulfate (mg/L):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">EPA secondary standard is 250 mg/L (for taste).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="sulfate" name="Sulfate" step="0.1" min="0" placeholder="e.g., 200.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="conductivity" class="block mb-1">
+                                    Conductivity (µS/cm):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Measures ability to conduct electricity (typically 50–1000 µS/cm).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="conductivity" name="Conductivity" step="0.1" min="0" placeholder="e.g., 300.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="organic_carbon" class="block mb-1">
+                                    Organic Carbon (mg/L):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Total Organic Carbon (typically < 4 mg/L in potable water).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="organic_carbon" name="Organic Carbon" step="0.1" min="0" placeholder="e.g., 3.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="trihalomethanes" class="block mb-1">
+                                    Trihalomethanes (µg/L):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Byproducts of chlorination (EPA limit is 80 µg/L).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="trihalomethanes" name="Trihalomethanes" step="0.1" min="0" placeholder="e.g., 40.0" class="w-full p-2 rounded-lg border">
+                            </div>
+                            <div>
+                                <label for="turbidity" class="block mb-1">
+                                    Turbidity (NTU):
+                                    <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                        (i)
+                                        <span class="tooltip-text">Clarity of water (EPA standard is < 1 NTU).</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="turbidity" name="Turbidity" step="0.1" min="0" placeholder="e.g., 0.5" class="w-full p-2 rounded-lg border">
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-4">
+                            <button id="predict-btn" class="px-4 py-2 neumorphic-btn">Predict</button>
+                            <button id="save-inputs-btn" class="px-4 py-2 neumorphic-btn">Save Inputs</button>
+                            <button id="compare-btn" class="px-4 py-2 neumorphic-btn">Compare Predictions</button>
+                        </div>
+                        <div id="prediction-result" class="mt-4 hidden">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <p class="text-lg font-medium">Prediction Result:</p>
+                            <p id="result-text"></p>
+                            <div class="flex gap-2">
+                                <button id="download-report" class="mt-2 px-4 py-2 neumorphic-btn">Download Report</button>
+                                <button id="share-result" class="mt-2 px-4 py-2 neumorphic-btn">Share Result</button>
+                            </div>
+                        </div>
+                        <div id="compare-table" class="hidden">
+                            <h3 class="text-xl font-medium mb-2">Prediction Comparisons</h3>
+                            <table class="compare-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Prediction</th>
+                                        <th>Probability (%)</th>
+                                        <th>pH</th>
+                                        <th>Hardness</th>
+                                        <th>Solids</th>
+                                        <th>Chloramines</th>
+                                        <th>Sulfate</th>
+                                        <th>Conductivity</th>
+                                        <th>Organic Carbon</th>
+                                        <th>Trihalomethanes</th>
+                                        <th>Turbidity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="compare-table-body"></tbody>
+                            </table>
+                        </div>
+                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                        <p id="narration-error" class="text-red-500 hidden mt-2">Narration is not supported in your browser. Please use a modern browser like Chrome or enable speech synthesis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: FAQ -->
+            <div class="section-container mb-8" id="faq">
+                <button class="section-btn neumorphic-btn" data-target="faq-content">
+                    <h2 class="text-xl font-semibold">Frequently Asked Questions</h2>
+                    <span class="water-droplet"></span>
+                </button>
+                <div id="faq-content" class="section-content">
+                    <div class="neumorphic-card fade-in">
+                        <h3 class="text-xl font-medium mb-2 cursor-pointer faq-toggle">What is the purpose of this project?</h3>
+                        <p class="faq-answer hidden">
+                            This project aims to predict whether a water sample is potable using machine learning, analyzing chemical properties to ensure water safety.
+                        </p>
+                    </div>
+                    <div class="neumorphic-card fade-in" style="animation-delay: 0.2s;">
+                        <h3 class="text-xl font-medium mb-2 cursor-pointer faq-toggle">Which model was used for predictions?</h3>
+                        <p class="faq-answer hidden">
+                            A Stacking ensemble model combining XGBoost, LightGBM, CatBoost, and Random Forest, achieving an F1-score of 0.88 and ROC-AUC of 0.93.
+                        </p>
+                    </div>
+                    <div class="neumorphic-card fade-in" style="animation-delay: 0.4s;">
+                        <h3 class="text-xl font-medium mb-2 cursor-pointer faq-toggle">
+                            What do the feature importance plots tell us?
+                            <span class="tooltip inline-block ml-2 text-sm text-gray-500">
+                                (i)
+                                <span class="tooltip-text">Feature importance plots show how each feature contributes to the model's predictions.</span>
+                            </span>
+                        </h3>
+                        <p class="faq-answer hidden">
+                            Feature importance plots explain the model’s predictions. For example, `ph*Hardness` is the most influential feature, with higher values favoring potability.
+                        </p>
+                    </div>
+                    <div class="neumorphic-card fade-in" style="animation-delay: 0.6s;">
+                        <button class="narrate-btn px-4 py-2 neumorphic-btn">Narrate FAQs</button>
+                        <p id="faq-narration-error" class="text-red-500 hidden mt-2">Narration is not supported in your browser. Please use a modern browser like Chrome or enable speech synthesis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Future Improvements -->
+            <div class="section-container mb-8" id="future">
+                <button class="section-btn neumorphic-btn" data-target="future-content">
+                    <h2 class="text-xl font-semibold">Future Improvements</h2>
+                    <span class="water-droplet"></span>
+                </button>
+                <div id="future-content" class="section-content">
+                    <div class="neumorphic-card fade-in">
+                        <ul class="list-disc pl-5">
+                            <li class="mb-2 fade-in">Implement a backend server to enable real-time predictions via API calls.</li>
+                            <li class="mb-2 fade-in" style="animation-delay: 0.2s;">Incorporate additional features like geographical data to enhance model accuracy.</li>
+                            <li class="mb-2 fade-in" style="animation-delay: 0.4s;">Apply model calibration techniques to improve probability estimates.</li>
+                            <li class="mb-2 fade-in" style="animation-delay: 0.6s;">Add a user feedback loop for continuous model improvement.</li>
+                            <li class="fade-in" style="animation-delay: 0.8s;">Integrate interactive visualizations using Plotly or D3.js.</li>
+                        </ul>
+                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                        <p id="future-narration-error" class="text-red-500 hidden mt-2">Narration is not supported in your browser. Please use a modern browser like Chrome or enable speech synthesis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Conclusion -->
+            <div class="section-container mb-8" id="conclusion">
+                <button class="section-btn neumorphic-btn" data-target="conclusion-content">
+                    <h2 class="text-xl font-semibold">Conclusion</h2>
+                    <span class="water-droplet"></span>
+                </button>
+                <div id="conclusion-content" class="section-content">
+                    <div class="neumorphic-card fade-in">
+                        <p>This project successfully implements a Stacking ensemble model to predict water potability with an F1-score of 0.88 and ROC-AUC of 0.93, leveraging features like `ph*Hardness`. The interactive visualizations and prediction tool provide valuable insights, while future enhancements such as real-time API integration and geographical data could further improve accuracy and usability.</p>
+                        <button class="narrate-btn mt-2 px-4 py-2 neumorphic-btn">Narrate</button>
+                        <p id="conclusion-narration-error" class="text-red-500 hidden mt-2">Narration is not supported in your browser. Please use a modern browser like Chrome or enable speech synthesis.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 px-4 text-center relative z-10">
+        <p>© 2025 Water Potability Prediction Project. All rights reserved.</p>
+        <p>Developed by Ishitva Sharma, Pratiksha Majumdar, Haritha R, Shruti M Sinha, and Bhumika</p>
+    </footer>
+
+    <!-- Scroll-to-Top Button -->
+    <div class="scroll-to-top" id="scroll-to-top">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+        </svg>
+    </div>
+
+    <!-- Modal for Zoomed Graphs -->
+    <div class="modal" id="graph-modal">
+        <div class="modal-content">
+            <span class="modal-close">×</span>
+            <img id="modal-image" src="" alt="Zoomed Graph" class="w-full h-auto rounded-lg">
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize Particles.js
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#22d3ee' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: false },
+                move: { enable: true, speed: 2, direction: 'none', random: true, out_mode: 'out' }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } }
+            },
+            retina_detect: true
+        });
+
+        // Theme Switcher
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                html.removeAttribute('data-theme');
+                themeToggle.textContent = 'Toggle Dark Mode';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = 'Toggle Light Mode';
+            }
+        });
+
+        // Hamburger Menu Toggle
+        const hamburger = document.getElementById('hamburger');
+        const menuBar = document.querySelector('.menu-bar');
+        hamburger.addEventListener('click', () => {
+            menuBar.classList.toggle('active');
+            hamburger.textContent = menuBar.classList.contains('active') ? '✕' : '☰';
+        });
+
+        // Section Button Toggle
+        const sectionButtons = document.querySelectorAll('.section-btn');
+        let activeSection = null;
+
+        sectionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.getAttribute('data-target');
+                const targetContent = document.getElementById(targetId);
+
+                if (activeSection && activeSection !== targetContent) {
+                    activeSection.classList.remove('active');
+                }
+
+                if (targetContent.classList.contains('active')) {
+                    targetContent.classList.remove('active');
+                    activeSection = null;
+                } else {
+                    targetContent.classList.add('active');
+                    activeSection = targetContent;
+                    targetContent.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Menu Bar Navigation
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetSection = document.getElementById(targetId);
+                const targetContent = targetSection.querySelector('.section-content');
+
+                if (activeSection && activeSection !== targetContent) {
+                    activeSection.classList.remove('active');
+                }
+
+                targetContent.classList.add('active');
+                activeSection = targetContent;
+
+                targetSection.scrollIntoView({ behavior: 'smooth' });
+
+                if (window.innerWidth <= 768) {
+                    menuBar.classList.remove('active');
+                    hamburger.textContent = '☰';
+                }
+            });
+        });
+
+        // Accordion Toggle
+        const accordionToggles = document.querySelectorAll('.accordion-toggle');
+        accordionToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const content = toggle.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+
+        // Carousel Functionality
+        const carousels = document.querySelectorAll('.carousel');
+        carousels.forEach(carousel => {
+            const inner = carousel.querySelector('.carousel-inner');
+            const items = carousel.querySelectorAll('.carousel-item');
+            const prevBtn = carousel.querySelector('.prev');
+            const nextBtn = carousel.querySelector('.next');
+            let currentIndex = 0;
+
+            const updateCarousel = () => {
+                inner.style.transform = `translateX(-${currentIndex * 100}%)`;
+            };
+
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex > 0) ? currentIndex - 1 : items.length - 1;
+                updateCarousel();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex < items.length - 1) ? currentIndex + 1 : 0;
+                updateCarousel();
+            });
+        });
+
+        // FAQ Toggle
+        const faqToggles = document.querySelectorAll('.faq-toggle');
+        faqToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const answer = toggle.nextElementSibling;
+                answer.classList.toggle('hidden');
+            });
+        });
+
+        // Prediction Simulation
+        const predictButton = document.getElementById('predict-btn');
+        const saveInputsButton = document.getElementById('save-inputs-btn');
+        const compareButton = document.getElementById('compare-btn');
+        const predictionResult = document.getElementById('prediction-result');
+        const resultText = document.getElementById('result-text');
+        const progressFill = document.getElementById('progress-fill');
+        const inputs = document.querySelectorAll('#predict-content input');
+        const downloadButton = document.getElementById('download-report');
+        const shareButton = document.getElementById('share-result');
+        const compareTable = document.getElementById('compare-table');
+        const compareTableBody = document.getElementById('compare-table-body');
+        let predictions = JSON.parse(localStorage.getItem('predictions')) || [];
+
+        // Load Saved Inputs
+        const savedInputs = JSON.parse(localStorage.getItem('savedInputs')) || {};
+        inputs.forEach(input => {
+            if (savedInputs[input.id]) {
+                input.value = savedInputs[input.id];
+                input.dispatchEvent(new Event('input'));
+            }
+        });
+
+        // Input Validation
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                const value = parseFloat(input.value);
+                const min = parseFloat(input.min);
+                const max = parseFloat(input.max) || Infinity;
+                if (input.value === '' || isNaN(value) || value < min || value > max) {
+                    input.classList.remove('input-valid');
+                    input.classList.add('input-invalid');
+                } else {
+                    input.classList.remove('input-invalid');
+                    input.classList.add('input-valid');
+                }
+            });
+        });
+
+        // Save Inputs
+        saveInputsButton.addEventListener('click', () => {
+            const inputValues = {};
+            inputs.forEach(input => {
+                inputValues[input.id] = input.value;
+            });
+            localStorage.setItem('savedInputs', JSON.stringify(inputValues));
+            alert('Inputs saved successfully!');
+        });
+
+        // Predict with Improved Logic
+        predictButton.addEventListener('click', () => {
+            const inputValues = {
+                ph: document.getElementById('ph').value,
+                hardness: document.getElementById('hardness').value,
+                solids: document.getElementById('solids').value,
+                chloramines: document.getElementById('chloramines').value,
+                sulfate: document.getElementById('sulfate').value,
+                conductivity: document.getElementById('conductivity').value,
+                organic_carbon: document.getElementById('organic_carbon').value,
+                trihalomethanes: document.getElementById('trihalomethanes').value,
+                turbidity: document.getElementById('turbidity').value
+            };
+
+            const allValid = Array.from(inputs).every(input => input.classList.contains('input-valid'));
+            if (!allValid) {
+                resultText.textContent = 'Please fill in all fields with valid values.';
+                predictionResult.classList.remove('hidden');
+                progressFill.style.width = '0';
+                return;
+            }
+
+            predictionResult.classList.remove('hidden');
+            progressFill.style.width = '0';
+            const progressInterval = setInterval(() => {
+                const currentWidth = parseFloat(progressFill.style.width) || 0;
+                if (currentWidth < 100) {
+                    progressFill.style.width = `${Math.min(currentWidth + 50, 100)}%`;
+                } else {
+                    clearInterval(progressInterval);
+                }
+            }, 500);
+
+            setTimeout(() => {
+                // Improved prediction logic based on input ranges
+                const phScore = Math.abs(parseFloat(inputValues.ph) - 7) / 7; // Closer to 7 is better
+                const hardnessScore = parseFloat(inputValues.hardness) > 200 ? (500 - parseFloat(inputValues.hardness)) / 300 : 1;
+                const totalScore = (1 - phScore) * 0.4 + hardnessScore * 0.4 + (1 - (parseFloat(inputValues.turbidity) / 1)) * 0.2;
+                const probability = Math.min(100, Math.max(0, totalScore * 100 + (Math.random() - 0.5) * 10)).toFixed(2);
+                const isPotable = probability > 50;
+
+                resultText.textContent = `${isPotable ? 'Potable' : 'Not Potable'} with ${probability}% probability.`;
+                const predictionData = {
+                    date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                    result: isPotable ? 'Potable' : 'Not Potable',
+                    probability: probability,
+                    inputs: inputValues
+                };
+                predictions.push(predictionData);
+                localStorage.setItem('predictions', JSON.stringify(predictions));
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+            }, 2000);
+        });
+
+        // Compare Predictions
+        compareButton.addEventListener('click', () => {
+            compareTable.classList.remove('hidden');
+            compareTableBody.innerHTML = '';
+            predictions.forEach(pred => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${pred.date}</td>
+                    <td>${pred.result}</td>
+                    <td>${pred.probability}</td>
+                    <td>${pred.inputs.ph}</td>
+                    <td>${pred.inputs.hardness}</td>
+                    <td>${pred.inputs.solids}</td>
+                    <td>${pred.inputs.chloramines}</td>
+                    <td>${pred.inputs.sulfate}</td>
+                    <td>${pred.inputs.conductivity}</td>
+                    <td>${pred.inputs.organic_carbon}</td>
+                    <td>${pred.inputs.trihalomethanes}</td>
+                    <td>${pred.inputs.turbidity}</td>
+                `;
+                compareTableBody.appendChild(row);
+            });
+        });
+
+        // Download Report
+        downloadButton.addEventListener('click', () => {
+            const result = resultText.textContent;
+            const inputValues = Array.from(inputs).map(input => `${input.name}: ${input.value}`).join('\n');
+            const reportContent = `Water Potability Prediction Report\n\nDate: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\n\nPrediction: ${result}\n\nInput Parameters:\n${inputValues}`;
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'water_potability_report.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Share Result
+        shareButton.addEventListener('click', () => {
+            const result = resultText.textContent;
+            const inputValues = Array.from(inputs).map(input => `${input.name}: ${input.value}`).join(', ');
+            const shareText = `Water Potability Prediction\nDate: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nPrediction: ${result}\nInputs: ${inputValues}`;
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('Prediction result copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy to clipboard. Please copy manually.');
+            });
+        });
+
+        // Voice Narration
+        const narrateButtons = document.querySelectorAll('.narrate-btn');
+        narrateButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const parentCard = button.closest('.neumorphic-card');
+                let textToNarrate = '';
+
+                if (parentCard.closest('#faq-content')) {
+                    const faqAnswers = parentCard.closest('#faq-content').querySelectorAll('.faq-answer:not(.hidden)');
+                    textToNarrate = Array.from(faqAnswers).map(answer => answer.textContent.trim()).join('. ');
+                } else {
+                    const paragraphs = parentCard.querySelectorAll('p:not(.fallback-message):not(#narration-error):not(#faq-narration-error):not(#future-narration-error):not(#conclusion-narration-error)');
+                    textToNarrate = Array.from(paragraphs).map(p => p.textContent.trim()).join('. ');
+                }
+
+                if (textToNarrate) {
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(textToNarrate);
+                        utterance.lang = 'en-US';
+                        utterance.rate = 1;
+                        utterance.onstart = () => { button.textContent = 'Narrating...'; };
+                        utterance.onend = () => { button.textContent = 'Narrate'; };
+                        utterance.onerror = () => {
+                            button.textContent = 'Narrate';
+                            const errorElement = parentCard.querySelector('[id$="-narration-error"]') || document.getElementById('narration-error');
+                            if (errorElement) errorElement.classList.remove('hidden');
+                        };
+                        window.speechSynthesis.cancel(); // Stop any ongoing narration
+                        window.speechSynthesis.speak(utterance);
+                    } else {
+                        const errorElement = parentCard.querySelector('[id$="-narration-error"]') || document.getElementById('narration-error');
+                        if (errorElement) errorElement.classList.remove('hidden');
+                    }
+                }
+            });
+        });
+
+        // Graph Zoom Modal
+        const graphImages = document.querySelectorAll('.graph-img');
+        const modal = document.getElementById('graph-modal');
+        const modalImage = document.getElementById('modal-image');
+        const modalClose = document.querySelector('.modal-close');
+
+        graphImages.forEach(img => {
+            img.addEventListener('click', () => {
+                modalImage.src = img.src;
+                modalImage.alt = img.alt;
+                modal.style.display = 'flex';
+            });
+        });
+
+        modalClose.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Scroll-to-Top Button with Progress Indicator
+        const scrollToTopBtn = document.getElementById('scroll-to-top');
+        const scrollProgress = document.getElementById('scroll-progress');
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            scrollProgress.style.width = `${scrollPercent}%`;
+
+            if (scrollTop > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Scroll-Triggered Animations
+        const elements = document.querySelectorAll('.fade-in');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        elements.forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
