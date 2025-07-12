@@ -2,6 +2,7 @@ See AquaSafe here!
 https://aqua-safe-water-potability-predicti.vercel.app/ <3
 
 Water Potability Prediction using Machine Learning | Interactive Website with Narration & Detection Tool
+
 This project focuses on predicting the potability of water using machine learning techniques and provides a rich, interactive web application to visualize the results.
 
 🔍 Key Features:
