@@ -19,3 +19,12 @@ Python, Scikit-learn, Pandas (for model building)
 HTML, CSS, JavaScript, Flask (for the web interface)
 Chart.js / Plotly (for interactive visualizations)
 Text-to-Speech (TTS) for narration feature
+
+Screenshots:
+<img width="1846" height="882" alt="image" src="https://github.com/user-attachments/assets/8344881c-f586-4425-80c2-2e03ab9da7e5" />
+
+<img width="1283" height="895" alt="image" src="https://github.com/user-attachments/assets/2755c54c-90d6-42d2-aad6-44e25601c3d2" />
+
+<img width="1182" height="647" alt="image" src="https://github.com/user-attachments/assets/ded7abcd-33a2-4f9a-9237-c629837c7d25" />
+
+<img width="1382" height="901" alt="image" src="https://github.com/user-attachments/assets/b1d1191f-a7e7-4d2c-85f0-37742d335623" />
